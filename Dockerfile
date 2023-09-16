@@ -1,5 +1,6 @@
 # Stage 1: Build the application
 FROM oven/bun:1.0.2 AS builder
+ENV DATABASE_URL=""
 RUN addgroup --system bunu && adduser --system --group bunu
 USER bunu
 WORKDIR /app
@@ -30,11 +31,13 @@ RUN bun install -p
 
 # Stage 4: Production image
 FROM oven/bun:1.0.2 AS production
+ENV DATABASE_URL=""
 RUN addgroup --system bunu && adduser --system --group bunu
 USER bunu
 WORKDIR /app
 # Copy only runtime dependencies and built sources from builder stage
 COPY --from=production-deps --chown=bunu:bunu /app/node_modules ./node_modules
+COPY --from=builder --chown=bunu:bunu /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=bunu:bunu /app/dist ./dist
 # Expose default port for production
 EXPOSE 3000
